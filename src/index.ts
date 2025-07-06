@@ -5,6 +5,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 
 import { ApolloServer } from '@apollo/server';    
+import { prisma } from './lib/db';
 async function init(){
       // const app = express(); 
       const app: Application = express();
@@ -15,13 +16,30 @@ async function init(){
         typeDefs: ` type Query {
           hello: String,
           say(name: String): String
-        }` ,// provide graph ql schema definitions
+        }
+        type Mutation {
+          createUser(firstName: String, lastName: String, email: String, password: String): Boolean
+        }  
+        ` ,// provide graph ql schema definitions
         resolvers: {
 
           Query:{
             hello: ()=> `Hey there, I am a graphql server.`,
             say: (_, {name}:{name: string})=>{ return `Hello ${name}`
 
+            }
+          },
+          Mutation:{
+            createUser: async (_, {firstName, lastName, email, password}:{firstName: string, lastName: string, email: string, password: string})=>{
+              const user = await prisma.user.create({
+                data: {
+                  firstName,
+                  lastName,
+                  email,
+                  password,
+                  salt: '1234567890',
+                }
+              })
             }
           }
         }
